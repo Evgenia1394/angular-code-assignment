@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { Observable, delay, of } from 'rxjs';
+import {Observable, delay, of, mergeMap, forkJoin,retry, catchError, throwError} from 'rxjs';
 import { pollsList } from './polls-mock.data';
 import { pollCategories } from './categories-mock.data';
-import { CategoryMeta, Poll, PollCategory } from './types';
+import {CategoryMeta, Poll, PollCategory} from './types';
 import { HttpClient } from '@angular/common/http';
 
 const randomDelay = (maxMs: number) => Math.random() * maxMs;
@@ -12,6 +12,30 @@ const randomDelay = (maxMs: number) => Math.random() * maxMs;
 })
 export class ApiMockService {
   constructor(private http: HttpClient) {}
+
+  getAllData(): Observable<any> {
+    return this.getCategories().pipe(
+      mergeMap(categories => {
+        const categoriesMeta$ = this.getCategoriesMeta();
+        const polls$ = this.getPolls();
+        return forkJoin([categoriesMeta$, polls$]).pipe(
+          mergeMap(data => {
+            const combinedData = {
+              categories,
+              categoriesMeta: data[0],
+              polls: data[1]
+            };
+            return of(combinedData);
+          }),
+          retry(3),
+          catchError(error => {
+            alert('Не удалось загрузить данные')
+            return throwError(error);
+          })
+        );
+      })
+    );
+  }
 
   getPolls(): Observable<Poll[]> {
     return of(pollsList).pipe(delay(randomDelay(5000)));

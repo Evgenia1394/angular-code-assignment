@@ -1,0 +1,40 @@
+<ng-container *ngIf="item && CategoryInfo">
+<div class="card-image">
+
+  <div class="card-votes">
+    <img src='../../assets/people.svg' alt='card-icon'>
+    <div class="card-votes-text">
+      {{item.voters_count}}
+    </div>
+  </div>
+  <div class="card-points-wrapper">
+    <div class="card-points-text">+ {{item.points}} Б</div>
+  </div>
+
+  <div [ngStyle]="{'background-image': 'url(' + item.image + ')'}" class="card-background"></div>
+</div>
+
+<div class="card-info">
+    <img [ngStyle]="{'background': CategoryInfo.backgroundColor }"
+         src="{{CategoryInfo.smallIcon}}"
+         class="card-info-image">
+
+    <div class="card-info-wrapper" >
+
+      <div  class="card-info-back"
+            [ngStyle]="{'background': CategoryInfo.backgroundColor }">
+        <div [ngStyle]="{'color': CategoryInfo.textColor }"
+             class="card-info-title">
+          {{CategoryInfo.name}}
+        </div>
+      </div>
+
+      <div class="card-info-description">
+        <div class="card-info-description-text">
+          {{item.title}}
+        </div>
+      </div>
+
+    </div>
+</div>
+</ng-container>
