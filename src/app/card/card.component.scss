@@ -2,7 +2,7 @@
 
 .card {
   &-image {
-    width: 404px;
+    //убрана фиксированная ширина карточек
     height: 200px;
     background: $green-color;
     border-radius: 16px;
@@ -11,7 +11,7 @@
     cursor: pointer;
     transition: transform 0.3s ease;
     &:hover {
-      transform: translateY(5px) scale(1.1);
+      transform: translateY(5px) scale(1.05);
     }
 
   }
@@ -96,6 +96,8 @@
       border-radius: 8px;
       padding: 3px 12px;
       flex: 0 0 auto;
+      //исправлена ширина лейбла с названием категории
+      width: max-content;
     }
     &-description {
       flex: 1;

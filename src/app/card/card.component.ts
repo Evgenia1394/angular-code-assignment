@@ -1,5 +1,5 @@
 import {Component, Input} from '@angular/core';
-import {CategoryMeta, Poll} from "../data-access/types";
+import {PollWithCategoryData} from "../data-access/data.service";
 
 @Component({
   selector: 'card',
@@ -7,6 +7,5 @@ import {CategoryMeta, Poll} from "../data-access/types";
   styleUrl: './card.component.scss',
 })
 export class CardComponent {
-  @Input() item!: Poll;
-  @Input() CategoryInfo!: CategoryMeta;
+  @Input() item!: PollWithCategoryData;
 }
