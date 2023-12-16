@@ -1,4 +1,4 @@
-<ng-container *ngIf="item && CategoryInfo">
+<ng-container *ngIf="item">
 <div class="card-image">
 
   <div class="card-votes">
@@ -15,17 +15,17 @@
 </div>
 
 <div class="card-info">
-    <img [ngStyle]="{'background': CategoryInfo.backgroundColor }"
-         src="{{CategoryInfo.smallIcon}}"
+    <img [ngStyle]="{'background': item.backgroundColor }"
+         src="{{item.smallIcon}}"
          class="card-info-image">
 
     <div class="card-info-wrapper" >
 
       <div  class="card-info-back"
-            [ngStyle]="{'background': CategoryInfo.backgroundColor }">
-        <div [ngStyle]="{'color': CategoryInfo.textColor }"
+            [ngStyle]="{'background': item.backgroundColor }">
+        <div [ngStyle]="{'color': item.textColor }"
              class="card-info-title">
-          {{CategoryInfo.name}}
+          {{item.name}}
         </div>
       </div>
 

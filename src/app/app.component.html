@@ -1,10 +1,10 @@
-<nav *ngIf="!isLoading" class="menu">
+<nav *ngIf="(categories$ | async) as Categories" class="menu">
   <select
-    [(ngModel)]="selectedCategory"
+    [(ngModel)]="selectedCategoryId"
     (change)="onCategoryChange($event)"
     class="select">
     <option value="">Все категории</option>
-    <option *ngFor="let category of AllCategoriesSelect" [value]="category.category_id">
+    <option *ngFor="let category of Categories" [value]="category.id">
       {{ category.name }}
     </option>
   </select>
@@ -13,9 +13,9 @@
     (click)="filterReset()">сброс
   </button>
 </nav>
-<div *ngIf="!isLoading" class="cards-wrapper">
+<div *ngIf="(polls$ | async) as FilteredPolls" class="cards-wrapper">
   <div *ngFor="let poll of FilteredPolls">
-    <card [item]="poll" [CategoryInfo]="categoryInfo(poll)"></card>
+    <card [item]="poll"></card>
   </div>
   <div *ngIf="!FilteredPolls.length" class="cards-wrapper">
     Ничего не найдено

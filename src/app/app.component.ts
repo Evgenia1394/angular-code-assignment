@@ -1,65 +1,65 @@
 import {Component, OnInit} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {AppModule} from "./app.module";
-import {CategoryMeta, Poll, PollCategory} from "./data-access/types";
+import {PollCategory} from "./data-access/types";
 import {ApiMockService} from "./data-access/api-mock.service";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
+import {DataService, PollWithCategoryData} from "./data-access/data.service";
+import {BehaviorSubject, combineLatest, map, Observable, shareReplay, startWith} from "rxjs";
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   standalone: true,
-  imports: [AppModule, CommonModule, HttpClientModule, FormsModule ],
-  providers: [ApiMockService],
+  imports: [AppModule, CommonModule, HttpClientModule, FormsModule],
+  providers: [ApiMockService, DataService],
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
-  public AllPolls: Poll[] = [];
-  public AllCategoriesData: {[id: string]: CategoryMeta} = {};
-  public AllCategoriesSelect: {name: string, category_id: number}[] = [];
-  public FilteredPolls: Poll[] = [];
+  //В компоненте достаточно иметь два обзервабла, на которые подписывались бы через async pipe в темплейте.
+  public polls$!: Observable<PollWithCategoryData[]>;
+  public categories$!: Observable<PollCategory[]>;
   public isLoading: boolean = true;
+  //Плюс BehaviorSubject для выбранной категории.
+  public selectedCategory = new BehaviorSubject<number | null>(null);
+  public selectedCategoryId: number | null = null;
+  public originalPolls$!: Observable<PollWithCategoryData[]>; // Для хранения исходных данных
 
-  constructor(public apiMockService: ApiMockService) {}
+  constructor(public dataService: DataService) {}
   title = 'angular-code-assignment';
-  selectedCategory: number | null = null;
 
-  public ngOnInit() {
-    (this.apiMockService.getAllData())
-      .subscribe(data => {
-        this.AllPolls = data.polls;
-        this.FilteredPolls = data.polls;
+  ngOnInit() {
+    // shareReplay для кеширования
+    this.originalPolls$ = this.dataService.pollWithCategories$.pipe(shareReplay(1));
 
-        data.categories.forEach((category: PollCategory) => {
-            this.AllCategoriesData[category.id] = data.categoriesMeta
-              .find((itemMeta: CategoryMeta) => category.alias === itemMeta.alias)
-            this.AllCategoriesSelect.push({name: category.name, category_id: category.id});
-        })
+    this.categories$ = this.dataService.categories$;
+    // Комбинируем исходные данные с выбранной категорией для фильтрации
+    this.polls$ = combineLatest([
+      this.originalPolls$,
+      this.selectedCategory.asObservable()
+    ]).pipe(
+      map(([polls, selectedCategoryId]) => {
         this.isLoading = false;
-      });
+        return selectedCategoryId === null ? polls : polls.filter(poll => poll.category_id === selectedCategoryId);
+      })
+    );
   }
 
-  public filterData() {
-    this.isLoading = true;
-    if (this.selectedCategory) {
-      this.FilteredPolls = this.AllPolls.filter(poll => poll.category_id === Number(this.selectedCategory));
-      this.isLoading = false;
-    } else {
-      this.FilteredPolls = this.AllPolls;
-      this.isLoading = false;
-    }
-  }
   public filterReset() {
-    return this.FilteredPolls = this.AllPolls;
-  }
+    this.selectedCategory.next(null);
+    this.selectedCategoryId = null;
+  };
 
-  public onCategoryChange(event: any) {
-    this.selectedCategory = event.target.value;
-    this.filterData();
-  }
-
-  public categoryInfo(poll: Poll): CategoryMeta {
-    return this.AllCategoriesData[poll.category_id]
-  }
-}
+  public onCategoryChange = (event: Event) => {
+    const selectElement = event.target as HTMLSelectElement;
+    const value = selectElement.value;
+    if (value) {
+      const numericValue = Number(value);
+      this.selectedCategoryId = isNaN(numericValue) ? null : numericValue;
+    } else {
+      this.selectedCategoryId = null;
+    }
+    this.selectedCategory.next(this.selectedCategoryId);
+  };
+};

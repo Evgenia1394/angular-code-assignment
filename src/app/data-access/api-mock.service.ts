@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import {Observable, delay, of, mergeMap, forkJoin,retry, catchError, throwError} from 'rxjs';
+import {Observable, delay, of, retry, catchError} from 'rxjs';
 import { pollsList } from './polls-mock.data';
 import { pollCategories } from './categories-mock.data';
 import {CategoryMeta, Poll, PollCategory} from './types';
@@ -13,41 +13,38 @@ const randomDelay = (maxMs: number) => Math.random() * maxMs;
 export class ApiMockService {
   constructor(private http: HttpClient) {}
 
-  getAllData(): Observable<any> {
-    return this.getCategories().pipe(
-      mergeMap(categories => {
-        const categoriesMeta$ = this.getCategoriesMeta();
-        const polls$ = this.getPolls();
-        return forkJoin([categoriesMeta$, polls$]).pipe(
-          mergeMap(data => {
-            const combinedData = {
-              categories,
-              categoriesMeta: data[0],
-              polls: data[1]
-            };
-            return of(combinedData);
-          }),
-          retry(3),
-          catchError(error => {
-            alert('Не удалось загрузить данные')
-            return throwError(error);
-          })
-        );
+//Ретрай лучше применять отдельно на каждый обсервабл с запросом
+  getPolls(): Observable<Poll[]> {
+    return of(pollsList).pipe(
+      delay(randomDelay(5000)),
+      retry(3),
+      catchError(error => {
+        console.error('Ошибка при получении опросов:', error);
+        return of([]);
       })
     );
   }
 
-  getPolls(): Observable<Poll[]> {
-    return of(pollsList).pipe(delay(randomDelay(5000)));
-  }
-
   getCategories(): Observable<PollCategory[]> {
-    return of(pollCategories).pipe(delay(randomDelay(5000)));
+    return of(pollCategories).pipe(
+      delay(randomDelay(5000)),
+      retry(3),
+      catchError(error => {
+        console.error('Ошибка при получении категорий:', error);
+        return of([]);
+      })
+    );
   }
 
   getCategoriesMeta(): Observable<CategoryMeta[]> {
     return this.http.get<CategoryMeta[]>(
       'https://minio.ag.mos.ru/ag-main/data/poll-categories.json'
+    ).pipe(
+      retry(3),
+      catchError(error => {
+        console.error('Ошибка при получении метаданных категорий:', error);
+        return of([]);
+      })
     );
   }
 }
